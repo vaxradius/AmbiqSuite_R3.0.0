@@ -1391,6 +1391,7 @@ void WatchHandlerInit(wsfHandlerId_t handlerId)
 /*************************************************************************************************/
 void WatchHandler(wsfEventMask_t event, wsfMsgHdr_t *pMsg)
 {
+  HciReadLocalSupFeatCmd();
   if (pMsg != NULL)
   {
     APP_TRACE_INFO1("Watch got evt %d", pMsg->event);
