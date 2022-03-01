@@ -30,6 +30,7 @@
 #include "hci_drv.h"
 
 #include "am_mcu_apollo.h"
+#include "am_util.h"
 
 
 
@@ -228,6 +229,7 @@ uint16_t hciTrSerialRxIncoming(uint8_t *pBuf, uint16_t len)
             for (i = 0; i < hdrLen; i++)
             {
               *pDataRx++ = hdrRx[i];
+              am_util_debug_printf("%d ",hdrRx[i]);
             }
           }
 
@@ -258,6 +260,7 @@ uint16_t hciTrSerialRxIncoming(uint8_t *pBuf, uint16_t len)
     {
       /* write incoming byte to allocated buffer */
       *pDataRx++ = dataByte;
+      am_util_debug_printf("%d ",dataByte);
 
       /* determine if entire packet has been read */
       iRx--;
@@ -279,6 +282,7 @@ uint16_t hciTrSerialRxIncoming(uint8_t *pBuf, uint16_t len)
       /* deliver data */
       if (pPktRx != NULL)
       {
+        am_util_debug_printf("\n");
         //am_hal_gpio_out_bit_set(13);
         hciCoreRecv(pktIndRx, pPktRx);
         //am_hal_gpio_out_bit_clear(13);
