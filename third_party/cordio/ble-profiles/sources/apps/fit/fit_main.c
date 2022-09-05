@@ -360,13 +360,10 @@ static void fitProcCccState(fitMsg_t *pMsg)
   {
     if (pMsg->ccc.value == ATT_CLIENT_CFG_NOTIFY)
     {
-      HrpsMeasStart((dmConnId_t) pMsg->ccc.hdr.param, FIT_HR_TIMER_IND, FIT_HRS_HRM_CCC_IDX);
+        uint8_t ui8Data[40] = {0xA5};      
+	  AttsHandleValueNtf((dmConnId_t) pMsg->ccc.hdr.param, HRS_HRM_HDL, 4, ui8Data);
     }
-    else
-    {
-      HrpsMeasStop((dmConnId_t) pMsg->ccc.hdr.param);
-    }
-    return;
+        return;
   }
 
   /* handle running speed and cadence measurement CCC */
@@ -374,11 +371,8 @@ static void fitProcCccState(fitMsg_t *pMsg)
   {
     if (pMsg->ccc.value == ATT_CLIENT_CFG_NOTIFY)
     {
-      fitSendRunningSpeedMeasurement((dmConnId_t)pMsg->ccc.hdr.param);
-    }
-    else
-    {
-      WsfTimerStop(&fitRscmTimer);
+        uint8_t ui8Data[40] = {0x5A};      
+	  AttsHandleValueNtf((dmConnId_t) pMsg->ccc.hdr.param, RSCS_RSM_HDL, 4, ui8Data);
     }
     return;
   }
@@ -588,8 +582,35 @@ static void fitProcMsg(fitMsg_t *pMsg)
       break;
 
     case ATTS_HANDLE_VALUE_CNF:
-      HrpsProcMsg(&pMsg->hdr);
-      BasProcMsg(&pMsg->hdr);
+    {      
+		attEvt_t *psEvt = (attEvt_t *)pMsg;     
+		if (psEvt->handle == HRS_HRM_HDL)      
+		{       
+			if (psEvt->hdr.status == ATT_SUCCESS)        
+			{          
+				if (AttsCccEnabled(psEvt->hdr.param, FIT_HRS_HRM_CCC_IDX))          
+				{
+					uint8_t ui8Data[40] = {0xA5};        
+					AttsHandleValueNtf(AppConnIsOpen(), HRS_HRM_HDL, 4, ui8Data);  
+				}
+
+			}
+		}
+		if (psEvt->handle == RSCS_RSM_HDL)      
+		{       
+			if (psEvt->hdr.status == ATT_SUCCESS)        
+			{       
+				if (AttsCccEnabled(psEvt->hdr.param, FIT_RSCS_SM_CCC_IDX))          
+				{
+					uint8_t ui8Data[40] = {0x5A};        
+					AttsHandleValueNtf(AppConnIsOpen(), RSCS_RSM_HDL, 4, ui8Data);  
+				}
+
+			}
+		}
+			
+
+	}
       break;
 
     case ATTS_CCC_STATE_IND:
