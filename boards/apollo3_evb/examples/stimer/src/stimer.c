@@ -59,7 +59,7 @@
 // Macro definitions
 //
 //*****************************************************************************
-#define WAKE_INTERVAL_IN_MS     1000
+#define WAKE_INTERVAL_IN_MS     1
 #define XT_PERIOD               32768
 #define WAKE_INTERVAL           XT_PERIOD * WAKE_INTERVAL_IN_MS * 1e-3
 
@@ -106,11 +106,15 @@ stimer_init(void)
 void
 am_stimer_cmpr0_isr(void)
 {
+	static uint32_t interval = 1;
+	interval =(interval + 1)%30000;
+	if(interval == 0)
+		interval = 1;
     //
     // Check the timer interrupt status.
     //
     am_hal_stimer_int_clear(AM_HAL_STIMER_INT_COMPAREA);
-    am_hal_stimer_compare_delta_set(0, WAKE_INTERVAL);
+    am_hal_stimer_compare_delta_set(0, (XT_PERIOD * interval * 1e-3));
 
 #ifdef AM_BSP_NUM_LEDS
     //
@@ -205,11 +209,14 @@ main(void)
     //
     // Sleep forever while waiting for an interrupt.
     //
+    am_hal_gpio_pinconfig(0, g_AM_HAL_GPIO_OUTPUT);
     while (1)
     {
+        am_hal_gpio_state_write(0, 0);
         //
         // Go to Deep Sleep.
         //
         am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
+        am_hal_gpio_state_write(0, 1);
     }
 }
