@@ -70,19 +70,19 @@
 #define UART_HCI_BRIDGE                 0
 #define MAX_UART_PACKET_SIZE            2048
 
-#define GPIO_COM_UART_TX                22
-#define GPIO_COM_UART_RX                23
+#define GPIO_COM_UART_TX                48//22
+#define GPIO_COM_UART_RX                49//23
 
 const am_hal_gpio_pincfg_t g_GpioUartTxCfg =
 {
-    .uFuncSel            = AM_HAL_PIN_22_UART0TX,
+    .uFuncSel            = AM_HAL_PIN_48_UART0TX,
     .eDriveStrength      = AM_HAL_GPIO_PIN_DRIVESTRENGTH_2MA
 };
 
 const am_hal_gpio_pincfg_t g_GpioUartRxCfg =
 {
     .ePullup             = AM_HAL_GPIO_PIN_PULLUP_WEAK,
-    .uFuncSel            = AM_HAL_PIN_23_UART0RX
+    .uFuncSel            = AM_HAL_PIN_49_UART0RX
 };
 
 //*****************************************************************************
@@ -532,7 +532,7 @@ main(void)
     // Enable the ITM
     //
     am_bsp_itm_printf_enable();
-    am_util_stdio_printf("Apollo3 UART to SPI Bridge\n");
+    am_util_stdio_printf("Apollo3p UART0(48,49) to SPI Bridge\n");
 #endif // AM_DEBUG_BLE_TIMING
     //
     // Start the UART.
