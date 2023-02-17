@@ -140,6 +140,7 @@ main(void)
 #endif
 
     am_hal_pwrctrl_memory_enable(AM_HAL_PWRCTRL_MEM_FLASH_MIN);
+    //am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE);//Power down cache in deep sleep instead of Retain cache in deep sleep
 
     //
     // Enable printing to the console.
