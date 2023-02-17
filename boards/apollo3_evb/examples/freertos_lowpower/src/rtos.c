@@ -66,7 +66,7 @@
 //
 //*****************************************************************************
 TaskHandle_t xSetupTask;
-
+#if 0
 //*****************************************************************************
 //
 // Interrupt handler for the CTIMER module.
@@ -88,7 +88,7 @@ am_ctimer_isr(void)
     //
     am_hal_ctimer_int_service(ui32Status);
 }
-
+#endif
 //*****************************************************************************
 //
 // Sleep function called from FreeRTOS IDLE task.
