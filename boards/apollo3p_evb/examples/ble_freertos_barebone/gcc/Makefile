@@ -89,6 +89,7 @@ DEFINES+= -DWSF_TRACE_ENABLED
 DEFINES+= -DAM_DEBUG_PRINTF
 DEFINES+= -DAM_PART_APOLLO3P
 DEFINES+= -Dgcc
+DEFINES+= -DAM_BLE_USE_NVM
 
 INCLUDES = -I../../../../../third_party/cordio/ble-profiles/sources/profiles/hrps
 INCLUDES+= -I../../../../../third_party/cordio/ble-host/sources/stack/dm

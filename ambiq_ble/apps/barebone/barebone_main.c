@@ -144,7 +144,7 @@ static const appSlaveCfg_t AppSlaveCfg =
 /*! configurable parameters for security */
 static const appSecCfg_t AppSecCfg =
 {
-    0,                                      /*! Authentication and bonding flags */
+    DM_AUTH_BOND_FLAG | DM_AUTH_MITM_FLAG | DM_AUTH_SC_FLAG,  /*! Authentication and bonding flags */
     0,                                      /*! Initiator key distribution flags */
     DM_KEY_DIST_LTK,                        /*! Responder key distribution flags */
     FALSE,                                  /*! TRUE if Out-of-band pairing data is present */
@@ -167,7 +167,7 @@ static const appUpdateCfg_t AppUpdateCfg =
 static const smpCfg_t AppSmpCfg =
 {
     3000,                                   /*! 'Repeated attempts' timeout in msec */
-    SMP_IO_NO_IN_NO_OUT,                    /*! I/O Capability */
+    SMP_IO_DISP_YES_NO,                     /*! I/O Capability */
     7,                                      /*! Minimum encryption key length */
     16,                                     /*! Maximum encryption key length */
     3,                                      /*! Attempts to trigger 'repeated attempts' timeout */
@@ -520,6 +520,7 @@ static void BareboneProcMsg(wsfMsgHdr_t *pMsg)
 {
     uint8_t uiEvent = APP_UI_NONE;
 
+    APP_TRACE_INFO2("[%s] event 0x%02X", __func__, pMsg->event);
     switch (pMsg->event)
     {
         case ATTS_HANDLE_VALUE_CNF:
@@ -575,6 +576,7 @@ static void BareboneProcMsg(wsfMsgHdr_t *pMsg)
 #ifdef TUTORIAL_ADDING_AMOTAS
             amotas_proc_msg(pMsg);
 #endif
+            AppSlaveSecurityReq(pMsg->param);
         }
         break;
 
@@ -603,6 +605,7 @@ static void BareboneProcMsg(wsfMsgHdr_t *pMsg)
         break;
 
         case DM_SEC_PAIR_FAIL_IND:
+	  APP_TRACE_INFO1("DM_SEC_PAIR_FAIL_IND, status = 0x%x", ((dmEvt_t*)pMsg)->pairCmpl.hdr.status);
             uiEvent = APP_UI_SEC_PAIR_FAIL;
         break;
 
@@ -613,7 +616,9 @@ static void BareboneProcMsg(wsfMsgHdr_t *pMsg)
         case DM_SEC_ENCRYPT_FAIL_IND:
             uiEvent = APP_UI_SEC_ENCRYPT_FAIL;
         break;
-
+        case DM_SEC_KEY_IND:
+            APP_TRACE_INFO2("[%s] keyInd.type 0x%02X", __func__, ((dmEvt_t *)pMsg)->keyInd.type);
+        break;
         case DM_SEC_AUTH_REQ_IND:
             AppHandlePasskey(&((dmEvt_t*)pMsg)->authReq);
         break;
