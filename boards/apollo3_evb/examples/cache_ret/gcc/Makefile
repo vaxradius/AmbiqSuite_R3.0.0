@@ -128,7 +128,7 @@ LIBS += ../../../../../mcu/apollo3/hal/gcc/bin/libam_hal.a
 CFLAGS = -mthumb -mcpu=$(CPU) -mfpu=$(FPU) -mfloat-abi=$(FABI)
 CFLAGS+= -ffunction-sections -fdata-sections -fomit-frame-pointer
 CFLAGS+= -MMD -MP -std=c99 -Wall -g
-CFLAGS+= -O0
+CFLAGS+= -Og
 CFLAGS+= $(DEFINES)
 CFLAGS+= $(INCLUDES)
 CFLAGS+= 

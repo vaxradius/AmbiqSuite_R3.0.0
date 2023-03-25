@@ -11,74 +11,132 @@
 #include "am_bsp.h"
 #include "am_util.h"
 
-#include "flash_matrix.h"//m_data (rx) : ORIGIN = 0x10000, LENGTH = 32K --> start from page 8 @64KB
+#include "flash_matrix.h"
+// uint32_t __attribute__((section (".myBufSection"))) flash_matrix[] --> 32KB
+//m_data (rx) : ORIGIN = 0x10000, LENGTH = 32K --> start from page 8 @64KB
+
+#include <string.h>
 
 // Define
 #define CACHE_SZIE (16*1024)
 
 // Global Variables
-uint32_t readbuffer[CACHE_SZIE>>2];
+uint32_t readbuffer0[CACHE_SZIE>>2];
+uint32_t readbuffer1[CACHE_SZIE>>2];
 
-int check_flash_instr ( bool inverse,uint32_t inst, uint32_t page) 
+//**************************************
+// Timer configuration.
+//**************************************
+am_hal_ctimer_config_t g_cTimer0 =
+{
+    // Don't link timers.
+    0,
+
+    // Set up Timer0A.
+    (AM_HAL_CTIMER_FN_REPEAT    |
+     AM_HAL_CTIMER_INT_ENABLE   |
+     AM_HAL_CTIMER_XT_16_384KHZ), // 1/16384 = 61uS
+    // No configuration for Timer0B.
+    0,
+};
+
+uint32_t interval = 40; //start from 61uS * 40 
+
+//*****************************************************************************
+    //
+// Timer Interrupt Service Routine (ISR)
+    //
+//*****************************************************************************
+void
+am_ctimer_isr(void)
+{
+	
+	interval = (interval+1); //increase 61us 
+	if(interval > 500)
+		interval = 4;//start from 61uS * 4
+	am_hal_ctimer_period_set(0, AM_HAL_CTIMER_TIMERA, interval,
+	                     (interval >> 1));
+    //
+	// Clear TimerA0 Interrupt (write to clear).
+    //
+	am_hal_ctimer_int_clear(AM_HAL_CTIMER_INT_TIMERA0);
+
+} // am_ctimer_isr()
+
+
+void 
+ctimer_init(void)
+{
+	
+	am_hal_clkgen_control(AM_HAL_CLKGEN_CONTROL_XTAL_START, 0);
+
+	//
+	// Set up timer A0.
+	//
+	am_hal_ctimer_clear(0, AM_HAL_CTIMER_TIMERA);
+	am_hal_ctimer_config(0, &g_cTimer0);
+
+	am_hal_ctimer_period_set(0, AM_HAL_CTIMER_TIMERA, interval,
+	                 (interval >> 1));
+
+	//
+	// Clear the timer Interrupt
+	//
+	am_hal_ctimer_int_clear(AM_HAL_CTIMER_INT_TIMERA0);
+
+	//
+	// Enable the timer Interrupt.
+	//
+	am_hal_ctimer_int_enable(AM_HAL_CTIMER_INT_TIMERA0);
+	//NVIC_SetPriority(CTIMER_IRQn, NVIC_configMAX_SYSCALL_INTERRUPT_PRIORITY);
+
+	//
+	// Enable the timer interrupt in the NVIC.
+	//
+	NVIC_EnableIRQ(CTIMER_IRQn);
+
+}
+
+void dump_readbuffer(void)
 {
 
-	uint32_t flash_addr;
-	uint32_t i;
+	am_bsp_itm_printf_enable();
+	am_util_stdio_terminal_clear();
+	am_util_stdio_printf("dump_readbuffer\n");
 
-	//MSG(("Checking Inst%d, Page%d\n",inst,page)); 
-	flash_addr = (inst *64 *  AM_HAL_FLASH_PAGE_SIZE) + page * AM_HAL_FLASH_PAGE_SIZE;
-	//vl_am_hal_itm_disable();
-	//AM_BFW(CTIMER, STCFG, FREEZE, 1);
-	//AM_BFW(CTIMER, STCFG, CLEAR, 1);
-	//AM_BFW(CTIMER, STCFG, CLEAR, 0);
-	for ( i = 0; i < (8 * 1024 / 4); i ++ ) 
+	for(int i = 0;CACHE_SZIE/4;i++)
 	{
-		readbuffer[i] = *(uint32_t*)(flash_addr + i*4);       
-	} 
-	//AM_BFW(CTIMER, STCFG, FREEZE, 0);
-	//vl_PutCoreToSleep(VLC_CORESLEEP_DEEPSLEEP);
-	am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
-	for ( i = 0; i < (8 * 1024 / 4); i ++) 
-	{
-		readbuffer[i] = *(uint32_t*)(flash_addr + i*4);       
-	}  
-	//vl_am_hal_itm_enable(true);
-	for ( i = 0; i < (8 * 1024 / 4); i ++ ) 
-	{
-		if (inverse)
-		{
-			if ( readbuffer[i] != ~(flash_addr+i*4) )
-			{
-				//err_flag++;
-				//MSG(("Inverse Error, inst%d, page%d,addr %x, value%x\n",inst,page,flash_addr+(i*4),readbuffer[i]));
-			}
-		}
-		else
-		{
-			if ( readbuffer[i] != (flash_addr+(i*4)) )
-			{
-				//err_flag++;
-				//MSG(("Error, inst%d, page%d,addr %x, value%x\n",inst,page,flash_addr+(i*4),readbuffer[i]));
-			}
-		}
+		if(readbuffer0[i] != readbuffer1[i])
+			am_util_stdio_printf("[%0X8] %0X8 : %0X8\n",i ,  readbuffer0[i], readbuffer1[i]);
 	}
-	return 0;
+
+	while(1);
 }
 
-// Override the default interrupt handler
-void am_stimer_cmpr0_isr(void)
+#if 0
+/*am_hal_cachectrl_defaults in /mcu/apollo3/hal/am_hal_cachectrl.c*/
+const am_hal_cachectrl_config_t am_hal_cachectrl_defaults =
 {
-    //AM_BFW(CTIMER, STCFG, FREEZE, 1);
-    //AM_REG(CTIMER, STMINTCLR) = 0xFFFFFFFF;
-    //AM_BFW(CTIMER, STCFG, CLEAR, 1);
-    //AM_BFW(CTIMER, STCFG, CLEAR, 0);
-}
+    .bLRU                       = 0,
+    .eDescript                  = AM_HAL_CACHECTRL_DESCR_1WAY_128B_1024E,
+    .eMode                      = AM_HAL_CACHECTRL_CONFIG_MODE_INSTR_DATA,
+};
+#else
+const am_hal_cachectrl_config_t my_cachectrl =
+{
+    .bLRU                       = 0,
+    .eDescript                  = AM_HAL_CACHECTRL_DESCR_2WAY_128B_512E,
+    .eMode                      = AM_HAL_CACHECTRL_CONFIG_MODE_INSTR_DATA,
+};
+#endif
 
 
 int
 main(void)
 {  
 
+	am_hal_gpio_state_write(11, AM_HAL_GPIO_OUTPUT_SET);
+	am_hal_gpio_pinconfig(11, g_AM_HAL_GPIO_OUTPUT);
 	//
 	// Set the clock frequency.
 	//
@@ -87,60 +145,55 @@ main(void)
 	//
 	// Set the default cache configuration
 	//
-	am_hal_cachectrl_config(&am_hal_cachectrl_defaults);
+	am_hal_cachectrl_config(&my_cachectrl);
 	am_hal_cachectrl_enable();
-
-	//
-	// Initialize the printf interface for UART output.
-	//
-	am_bsp_uart_printf_enable();
-
-	//
-	// Print the banner.
-	//
-	am_util_stdio_terminal_clear();
-	am_util_stdio_printf("Retain Cache in Deepsleep\n");
-
-	//
-	// To minimize power during the run, disable the UART.
-	//
-	am_bsp_uart_printf_disable();
 
 	//
 	// Configure the board for low power.
 	//
 	am_bsp_low_power_init();
 
-	//
-	// Turn OFF unneeded flash
-	//
-	if ( am_hal_pwrctrl_memory_enable(AM_HAL_PWRCTRL_MEM_FLASH_MIN) )
-	{
-		while(1);
-	}
 
 	// For optimal Deep Sleep current, configure cache to be powered-down in deepsleep:
-	am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE);
+	//am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE);
 
 	//
 	// Power down SRAM, only 32K SRAM retained
 	//
-	am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_SRAM_MAX);
-	am_hal_pwrctrl_memory_deepsleep_retain(AM_HAL_PWRCTRL_MEM_SRAM_32K_DTCM);
+	//am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_SRAM_MAX);
+	am_hal_pwrctrl_memory_deepsleep_retain(AM_HAL_PWRCTRL_MEM_SRAM_384K);
+
+	ctimer_init();
+
+	//
+	// Enable interrupts to the core.
+	//
+	am_hal_interrupt_master_enable();
+
+	//
+	// Start timer A0
+	//
+	
 
 	while (1)
-	{
-		for(uint32_t flash_inst=0; flash_inst<1; flash_inst++) {
-			for(uint32_t page=8; page<10; page++) {
-				check_flash_instr(false,flash_inst,page);
-			}
+	{  
+		int ret = 0;
+		memcpy((void *)readbuffer0, (void *)flash_matrix,CACHE_SZIE);
+		am_hal_ctimer_start(0, AM_HAL_CTIMER_TIMERA);
+		am_hal_gpio_state_write(11, AM_HAL_GPIO_OUTPUT_CLEAR);
+		am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
+		am_hal_gpio_state_write(11, AM_HAL_GPIO_OUTPUT_SET);
+		am_hal_ctimer_stop(0, AM_HAL_CTIMER_TIMERA);
+				
+		memcpy((void *)readbuffer1, (void *)flash_matrix,CACHE_SZIE);
+		ret = memcmp((const void *)readbuffer0, (const void *)readbuffer1, CACHE_SZIE);
+		if(ret)
+		{
+			
+			dump_readbuffer();
 		}
-
-		for(uint32_t flash_inst=0; flash_inst<1; flash_inst++) {
-			for(uint32_t page=10; page<12; page++) {
-				check_flash_instr(true,flash_inst,page);
-			}
-		}
+			
+			
 	}
 }
 
