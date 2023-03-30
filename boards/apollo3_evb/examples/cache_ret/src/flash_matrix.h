@@ -1,4 +1,4 @@
- uint32_t __attribute__((section (".myBufSection"))) flash_matrix[] = {
+ const uint32_t flash_matrix[] = {
 0x00004000,0x00004004,0x00004008,0x0000400C,
 0x00004010,0x00004014,0x00004018,0x0000401C,
 0x00004020,0x00004024,0x00004028,0x0000402C,
