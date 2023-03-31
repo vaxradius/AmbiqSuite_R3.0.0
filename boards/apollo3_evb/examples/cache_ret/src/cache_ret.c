@@ -100,16 +100,47 @@ ctimer_init(void)
 
 void dump_readbuffer(void)
 {
-
 	am_bsp_itm_printf_enable();
 	am_util_stdio_terminal_clear();
 	am_util_stdio_printf("dump_readbuffer\n");
 
-	for(int i = 0;CACHE_SZIE/4;i++)
+	for(int i = 0;i < (CACHE_SZIE/4);i++)
 	{
 		if(readbuffer0[i] != readbuffer1[i])
 			am_util_stdio_printf("[%0X8] %0X8 : %0X8\n",i ,  readbuffer0[i], readbuffer1[i]);
 	}
+
+	while(1);
+}
+
+void print_test_patterns(void)
+{
+	am_bsp_itm_printf_enable();
+	am_util_stdio_terminal_clear();
+
+	am_util_stdio_printf("const uint32_t flash_matrix1[] = {\n");
+
+	for(int i = 1;i <= (CACHE_SZIE/4);i++)
+	{
+		am_util_stdio_printf("0xA5A5A5A5");
+		if(i < (CACHE_SZIE/4))
+			am_util_stdio_printf(",");
+		if(i%8 == 0)
+			am_util_stdio_printf("\n");
+	}
+	am_util_stdio_printf(" };\n");
+	
+	am_util_stdio_printf("const uint32_t flash_matrix2[] = {\n");
+
+	for(int i = 1;i <= (CACHE_SZIE/4);i++)
+	{
+		am_util_stdio_printf("0x5A5A5A5A");
+		if(i < (CACHE_SZIE/4))
+			am_util_stdio_printf(",");
+		if(i%8 == 0)
+			am_util_stdio_printf("\n");
+	}
+	am_util_stdio_printf(" };\n");
 
 	while(1);
 }
@@ -170,6 +201,8 @@ main(void)
 	//
 	am_hal_interrupt_master_enable();
 
+	//print_test_patterns();
+
 	//
 	// Start timer A0
 	//
@@ -178,14 +211,32 @@ main(void)
 	while (1)
 	{  
 		int ret = 0;
-		memcpy((void *)readbuffer0, (void *)flash_matrix,CACHE_SZIE);
+		/*0xA5A5A5A5*/
+		memcpy((void *)readbuffer0, (void *)flash_matrix1,CACHE_SZIE);
+		
 		am_hal_ctimer_start(0, AM_HAL_CTIMER_TIMERA);
 		am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_CLEAR);
 		am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
 		am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_SET);
 		am_hal_ctimer_stop(0, AM_HAL_CTIMER_TIMERA);
-				
-		memcpy((void *)readbuffer1, (void *)flash_matrix,CACHE_SZIE);
+		
+		memcpy((void *)readbuffer1, (void *)flash_matrix1,CACHE_SZIE);
+		ret = memcmp((const void *)readbuffer0, (const void *)readbuffer1, CACHE_SZIE);
+		if(ret)
+		{
+			while(1);
+		}
+
+		/*0x5A5A5A5A*/
+		memcpy((void *)readbuffer0, (void *)flash_matrix2,CACHE_SZIE);
+		
+		am_hal_ctimer_start(0, AM_HAL_CTIMER_TIMERA);
+		am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_CLEAR);
+		am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
+		am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_SET);
+		am_hal_ctimer_stop(0, AM_HAL_CTIMER_TIMERA);
+		
+		memcpy((void *)readbuffer1, (void *)flash_matrix2,CACHE_SZIE);
 		ret = memcmp((const void *)readbuffer0, (const void *)readbuffer1, CACHE_SZIE);
 		if(ret)
 		{
