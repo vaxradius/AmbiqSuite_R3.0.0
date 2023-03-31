@@ -19,6 +19,7 @@
 
 // Define
 #define CACHE_SZIE (16*1024)
+#define DEBUG_GPIO 41
 
 // Global Variables
 uint32_t readbuffer0[CACHE_SZIE>>2];
@@ -126,17 +127,16 @@ const am_hal_cachectrl_config_t my_cachectrl =
 {
     .bLRU                       = 0,
     .eDescript                  = AM_HAL_CACHECTRL_DESCR_2WAY_128B_512E,
-    .eMode                      = AM_HAL_CACHECTRL_CONFIG_MODE_INSTR_DATA,
+    .eMode                      = AM_HAL_CACHECTRL_CONFIG_MODE_DATA,
 };
 #endif
-
 
 int
 main(void)
 {  
 
-	am_hal_gpio_state_write(11, AM_HAL_GPIO_OUTPUT_SET);
-	am_hal_gpio_pinconfig(11, g_AM_HAL_GPIO_OUTPUT);
+	am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_SET);
+	am_hal_gpio_pinconfig(DEBUG_GPIO, g_AM_HAL_GPIO_OUTPUT);
 	//
 	// Set the clock frequency.
 	//
@@ -180,17 +180,16 @@ main(void)
 		int ret = 0;
 		memcpy((void *)readbuffer0, (void *)flash_matrix,CACHE_SZIE);
 		am_hal_ctimer_start(0, AM_HAL_CTIMER_TIMERA);
-		am_hal_gpio_state_write(11, AM_HAL_GPIO_OUTPUT_CLEAR);
+		am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_CLEAR);
 		am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
-		am_hal_gpio_state_write(11, AM_HAL_GPIO_OUTPUT_SET);
+		am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_SET);
 		am_hal_ctimer_stop(0, AM_HAL_CTIMER_TIMERA);
 				
 		memcpy((void *)readbuffer1, (void *)flash_matrix,CACHE_SZIE);
 		ret = memcmp((const void *)readbuffer0, (const void *)readbuffer1, CACHE_SZIE);
 		if(ret)
 		{
-			
-			dump_readbuffer();
+			while(1);
 		}
 			
 			
