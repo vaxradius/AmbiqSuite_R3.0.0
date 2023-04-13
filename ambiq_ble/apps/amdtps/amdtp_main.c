@@ -121,11 +121,11 @@ static const appSlaveCfg_t amdtpSlaveCfg =
 /*! configurable parameters for security */
 static const appSecCfg_t amdtpSecCfg =
 {
-  DM_AUTH_BOND_FLAG | DM_AUTH_SC_FLAG,    /*! Authentication and bonding flags */
-  0,                                      /*! Initiator key distribution flags */
-  DM_KEY_DIST_LTK,                        /*! Responder key distribution flags */
-  FALSE,                                  /*! TRUE if Out-of-band pairing data is present */
-  FALSE                                   /*! TRUE to initiate security upon connection */
+    DM_AUTH_BOND_FLAG | DM_AUTH_MITM_FLAG | DM_AUTH_SC_FLAG,  /*! Authentication and bonding flags */
+    0,                                      /*! Initiator key distribution flags */
+    DM_KEY_DIST_LTK,                        /*! Responder key distribution flags */
+    FALSE,                                  /*! TRUE if Out-of-band pairing data is present */
+    FALSE                                   /*! TRUE to initiate security upon connection */
 };
 
 /*! configurable parameters for AMDTP connection parameter update */
@@ -150,7 +150,7 @@ static const appUpdateCfg_t amdtpUpdateCfg =
 static const smpCfg_t amdtpSmpCfg =
 {
   3000,                                   /*! 'Repeated attempts' timeout in msec */
-  SMP_IO_NO_IN_NO_OUT,                    /*! I/O Capability */
+  SMP_IO_DISP_YES_NO,                    /*! I/O Capability */
   7,                                      /*! Minimum encryption key length */
   16,                                     /*! Maximum encryption key length */
   3,                                      /*! Attempts to trigger 'repeated attempts' timeout */

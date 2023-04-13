@@ -455,6 +455,7 @@ amdtps_proc_msg(wsfMsgHdr_t *pMsg)
     if (pMsg->event == DM_CONN_OPEN_IND)
     {
         amdtps_conn_open((dmEvt_t *) pMsg);
+	  AppSlaveSecurityReq(pMsg->param);
     }
     else if (pMsg->event == DM_CONN_CLOSE_IND)
     {
