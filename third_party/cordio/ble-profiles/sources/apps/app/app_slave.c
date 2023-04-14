@@ -893,7 +893,8 @@ static void appSecEncryptInd(dmEvt_t *pMsg, appConnCb_t *pCb)
         {
             if(*pTbl != 0)
             {
-                AttsCccSet(connId, i, *pTbl);
+			APP_TRACE_INFO2("appSecEncryptInd idx %d previous record %d AttsCccSet", i, *pTbl);
+			AttsCccSet(connId, i, *pTbl);
             }
         }
     }

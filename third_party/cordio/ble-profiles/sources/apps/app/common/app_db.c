@@ -31,6 +31,8 @@
 #include "app_main.h"
 #include "app_db.h"
 #include "app_cfg.h"
+#include "wsf_trace.h"
+
 
 /**************************************************************************************************
   Data Types
@@ -705,6 +707,7 @@ void AppDbSetCccTblValue(appDbHdl_t hdl, uint16_t idx, uint16_t value)
   if(AppCheckBonded(connId))
   {
     AppStorePairingInfoInNVM(hdl);
+	APP_TRACE_INFO2("AppDbSetCccTblValue idx %d value : %d ", idx, value);
   }
 #endif
 }

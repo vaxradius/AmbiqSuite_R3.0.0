@@ -421,6 +421,7 @@ amdtps_write_cback(dmConnId_t connId, uint16_t handle, uint8_t operation,
 void
 amdtps_start(dmConnId_t connId, uint8_t timerEvt, uint8_t amdtpCccIdx)
 {
+	APP_TRACE_INFO0("<<<amdtps_start>>>");
     //
     // set conn id
     //

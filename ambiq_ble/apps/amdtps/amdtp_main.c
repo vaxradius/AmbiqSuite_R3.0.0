@@ -301,7 +301,7 @@ static void amdtpCccCback(attsCccEvt_t *pEvt)
 {
   attsCccEvt_t  *pMsg;
   appDbHdl_t    dbHdl;
-
+#if 0
   /* if CCC not set from initialization and there's a device record */
   if ((pEvt->handle != ATT_HANDLE_NONE) &&
       ((dbHdl = AppDbGetHdl((dmConnId_t) pEvt->hdr.param)) != APP_DB_HDL_NONE))
@@ -309,7 +309,7 @@ static void amdtpCccCback(attsCccEvt_t *pEvt)
     /* store value in device database */
     AppDbSetCccTblValue(dbHdl, pEvt->idx, pEvt->value);
   }
-
+#endif
   if ((pMsg = WsfMsgAlloc(sizeof(attsCccEvt_t))) != NULL)
   {
     memcpy(pMsg, pEvt, sizeof(attsCccEvt_t));
@@ -603,6 +603,7 @@ static void amdtpProcMsg(amdtpMsg_t *pMsg)
 
     case DM_SEC_ENCRYPT_IND:
       uiEvent = APP_UI_SEC_ENCRYPT;
+	  APP_TRACE_INFO0("<<DM_SEC_ENCRYPT_IND>>");
       break;
 
     case DM_SEC_ENCRYPT_FAIL_IND:
