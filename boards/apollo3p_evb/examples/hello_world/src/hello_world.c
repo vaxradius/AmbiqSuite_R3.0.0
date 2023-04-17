@@ -53,6 +53,49 @@
 #include "am_bsp.h"
 #include "am_util.h"
 
+void dump_info0(void)
+{
+	uint32_t *idx= (uint32_t *)0x50020000;
+	for(int i = 0; i < (8*1024)/4; i++)
+	{
+		if(i%4==0)
+			am_util_stdio_printf("\n[0x%08X] ",i*4);
+		am_util_stdio_printf("0x%08X ", *(idx+i));
+	}
+
+
+	// unlock info0 access w4 0x40030078 1             
+	// unlock the info0 secured portion w4 0x40030080 DEADBEEF DEADBEEF DEADBEEF DEADBEEF   // write the unlock key		
+	// this should be replaced with actual customer key!!!
+	// mem32 0x4003007C 1          
+	// dump the lock status for check
+
+	*((uint32_t *)0x40030078) = 1;
+	*((uint32_t *)0x40030080) = 0xDEADBEEF;
+	*((uint32_t *)0x40030084) = 0xDEADBEEF;
+	*((uint32_t *)0x40030088) = 0xDEADBEEF;
+	*((uint32_t *)0x4003008C) = 0xDEADBEEF;
+
+	am_util_stdio_printf("\nlock status : 0x%08X ", *((uint32_t *)0x4003007C));
+
+	for(int i = 0; i < (8*1024)/4; i++)
+	{
+		if(i%4==0)
+			am_util_stdio_printf("\n[0x%08X] ",i*4);
+		am_util_stdio_printf("0x%08X ", *(idx+i));
+	}
+
+	//w4 0x40030080 FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   // lock the secured portion
+	*((uint32_t *)0x40030080) = 0xFFFFFFFF;
+	*((uint32_t *)0x40030084) = 0xFFFFFFFF;
+	*((uint32_t *)0x40030088) = 0xFFFFFFFF;
+	*((uint32_t *)0x4003008C) = 0xFFFFFFFF;
+
+	am_util_stdio_printf("\nlock status : 0x%08X ", *((uint32_t *)0x4003007C));
+
+	
+}
+
 //*****************************************************************************
 //
 // Main
@@ -164,7 +207,7 @@ main(void)
     }
 #endif // AM_PART_APOLLO3
 
-
+	dump_info0();
 
     //
     // We are done printing.
