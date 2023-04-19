@@ -53,6 +53,23 @@
 #include "am_bsp.h"
 #include "am_util.h"
 
+#define PAYLOAD_SIZE_ADDRESS		0x80000 //Progam payload at Offset 512KB
+#define PAYLOAD_CRC32_ADDRESS		0x80004
+#define PAYLOAD_START_ADDRESS 	0x80008 
+
+
+void HW_CRC32(void)
+{
+	uint32_t ui32Ret;
+	uint32_t ui32Crc;
+
+	am_util_stdio_printf("\nPayload size: 0x%02X \t CRC32: 0x%08X\n", *((uint16_t *)PAYLOAD_SIZE_ADDRESS), *((uint32_t *)PAYLOAD_CRC32_ADDRESS));
+
+	ui32Ret = am_hal_crc32(PAYLOAD_START_ADDRESS, *((uint16_t *)PAYLOAD_SIZE_ADDRESS) - 8, &ui32Crc);
+	 
+	am_util_stdio_printf("am_hal_crc32  ret: %d \t CRC32: 0x%08X\n", ui32Ret, ui32Crc);
+}
+
 //*****************************************************************************
 //
 // Main
@@ -163,9 +180,7 @@ main(void)
         am_util_stdio_printf("am_hal_security_get_info failed 0x%X\n", ui32Status);
     }
 #endif // AM_PART_APOLLO3
-
-
-
+    HW_CRC32();
     //
     // We are done printing.
     // Disable debug printf messages on ITM.
