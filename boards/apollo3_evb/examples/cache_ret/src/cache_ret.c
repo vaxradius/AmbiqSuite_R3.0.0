@@ -184,16 +184,6 @@ main(void)
 	//
 	am_bsp_low_power_init();
 
-
-	// For optimal Deep Sleep current, configure cache to be powered-down in deepsleep:
-	//am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE);
-
-	//
-	// Power down SRAM, only 32K SRAM retained
-	//
-	//am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_SRAM_MAX);
-	am_hal_pwrctrl_memory_deepsleep_retain(AM_HAL_PWRCTRL_MEM_SRAM_384K);
-
 	ctimer_init();
 
 	//
@@ -203,10 +193,34 @@ main(void)
 
 	//print_test_patterns();
 
-	//
-	// Start timer A0
-	//
-	
+	//Test SRAM retention with pattern "0xA5"
+	//384K SRAM retained
+	am_hal_pwrctrl_memory_deepsleep_retain(AM_HAL_PWRCTRL_MEM_SRAM_384K);
+	am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE);
+	memset((void *)(0x10010000),0xA5,0x50000);
+
+	am_hal_ctimer_start(0, AM_HAL_CTIMER_TIMERA);
+	am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_CLEAR);
+	am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
+	//am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_NORMAL);
+	am_hal_gpio_state_write(DEBUG_GPIO, AM_HAL_GPIO_OUTPUT_SET);
+	am_hal_ctimer_stop(0, AM_HAL_CTIMER_TIMERA);
+
+	for(int i = 0x10010000; i < 0x10060000; )
+	{
+		if(*((uint32_t *)i) != 0xA5A5A5A5)
+		{
+			am_bsp_itm_printf_enable();
+			am_util_stdio_terminal_clear();
+			am_util_stdio_printf(" [%x] %x != 0xA5A5A5A5 !=\n",i , *((uint32_t *)i));
+			while(1);
+		}
+
+		i+=4;
+	}
+
+	//Test Cache retention
+	am_hal_pwrctrl_memory_deepsleep_retain(AM_HAL_PWRCTRL_MEM_CACHE);
 
 	while (1)
 	{  
