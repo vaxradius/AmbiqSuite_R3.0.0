@@ -1,0 +1,41 @@
+//connect to device
+// NEED to specify -device AMA3B2KK-KBR (for Apollo3P) or -device AMA3B1KK-KBR/KCR (for Apollo3) from command line
+device AMA3B1KK-KCR
+si SWD
+speed 1000
+r
+sleep 10
+g
+
+mem32 0x4002100C 3
+mem32 0x40018000 1 //CACHECFG
+sleep 100
+mem32 0x4002100C 3
+mem32 0x40018000 1 //CACHECFG
+mem32 0x40021008 1 //DEVPWREN
+//h
+//sleep 10
+//w4 0x4002100C 0x80000000
+//w4 0x40018000 0x00100480 //CACHECFG
+//w4 0x40021024 0 //LDO
+//w4 0x40021008 0x1FFF //DEVPWREN PDM
+//mem32 0x40021018 1 //DEVPWRSTATUS
+//w4 0x40020250 1 //TPIUCTRL
+//g
+//mem32 0x4002100C 3
+//mem32 0x40018000 1 //CACHECFG
+//mem32 0x40021018 1 //DEVPWRSTATUS
+sleep 1245 //1245 failed 1246 passed
+h
+sleep 10
+savebin C:\temp\1245.bin 0x10000000 0x60000
+g
+//sleep 1
+h
+sleep 10
+savebin C:\temp\1246.bin 0x10000000 0x60000
+g
+
+//w4 0x40030078 1             
+qc
+
