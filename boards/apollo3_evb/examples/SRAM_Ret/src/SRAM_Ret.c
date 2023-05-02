@@ -64,8 +64,14 @@
 
 // Define
 #define DEBUG_GPIO			41
+
+#if 1 //SRAM(main) 0x10010000 – 0x1005FFFF
 #define SRAM_START_ADDR	0x10010000
 #define SRAM_SIZE			0x50000
+#else //SRAM(TCM) 0x10000000 – 0x1000FFFF
+#define SRAM_START_ADDR	0x10000000
+#define SRAM_SIZE			0x10000
+#endif
 
 
 //**************************************
